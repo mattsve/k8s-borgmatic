@@ -1,0 +1,36 @@
+location:
+    source_directories:
+        - .
+        
+    one_file_system: true
+
+    exclude_patterns:
+        - '.last-backup'
+
+    exclude_caches: true
+    exclude_if_present: .nobackup
+
+storage:
+    compression: auto,lzma
+
+retention:
+    keep_daily: 3
+    keep_weekly: 4
+    keep_monthly: 12
+    keep_yearly: 2
+
+consistency:
+    checks:
+        # uncomment to always do integrity checks. (takes long time for large repos)
+        #- repository
+        - disabled
+
+    check_last: 3
+
+hooks:
+    # List of one or more shell commands or scripts to execute before creating a backup.
+    before_backup:
+        - echo "`date` - Starting backup"
+
+    after_backup:
+        - echo "`date` - Ending backup"
