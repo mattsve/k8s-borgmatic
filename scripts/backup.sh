@@ -7,6 +7,7 @@ usage() {
     echo "  -r|--repository <repository>"
     echo "  -p|--passphrase <passphrase>"
     echo "  -a|--archive <archive>"
+    echo "  -l|--last # create file .last-backup with name of last successful backup, used by restore"
     echo "  -h|--help"
 }
 
@@ -18,8 +19,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS=r:p:a:h
-LONGOPTS=repository,passphrase,archive,help
+OPTIONS=r:p:a:lh
+LONGOPTS=repository,passphrase,archive,last,help
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -37,6 +38,7 @@ eval set -- "$PARSED"
 repository=
 passphrase=
 archive=
+last_backup=false
 # now enjoy the options in order and nicely split until we see --
 while true; do
     case "$1" in
@@ -51,6 +53,10 @@ while true; do
         -a|--archive) # specify archive
             archive="$2"
             shift 2
+            ;;
+        -l|--last)
+            last_backup=true
+            shift
             ;;
         -h|--help) # help
             usage
@@ -94,5 +100,8 @@ borgmatic init --encryption repokey-blake2 \
     --override "location.repositories=[$repository]" "storage.encryption_passphrase=$passphrase" "storage.archive_name_format=$archive-{now}" "retention.prefix=$archive-" "consistency.prefix=$archive-"
 borgmatic --stats -v 0 \
     --override "location.repositories=[$repository]" "storage.encryption_passphrase=$passphrase" "storage.archive_name_format=$archive-{now}" "retention.prefix=$archive-" "consistency.prefix=$archive-"
-borgmatic list --successful --last 1 --json \
-    --override "location.repositories=[$repository]" "storage.encryption_passphrase=$passphrase" "storage.archive_name_format=$archive-{now}" "retention.prefix=$archive-" "consistency.prefix=$archive-" | jq -r .[0].archives[0].archive > .last-backup
+
+if [[ "$last_backup" = true ]]; then
+    borgmatic list --successful --last 1 --json \
+        --override "location.repositories=[$repository]" "storage.encryption_passphrase=$passphrase" "storage.archive_name_format=$archive-{now}" "retention.prefix=$archive-" "consistency.prefix=$archive-" | jq -r .[0].archives[0].archive > .last-backup
+fi
