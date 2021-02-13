@@ -90,6 +90,9 @@ if [[ -z "$passphrase" ]]; then
 fi
 
 cd $1
+borgmatic init --encryption repokey-blake2 \
+    --override "location.repositories=[$repository]" "storage.encryption_passphrase=$passphrase" "storage.archive_name_format=$archive-{now}" "retention.prefix=$archive-" "consistency.prefix=$archive-"
+
 LAST_BACKUP=$(borgmatic list --successful --last 1 --json \
         --override "location.repositories=[$repository]" "storage.encryption_passphrase=$passphrase" "storage.archive_name_format=$archive-{now}" "retention.prefix=$archive-" "consistency.prefix=$archive-" \
         | jq -r .[0].archives[0].archive)
